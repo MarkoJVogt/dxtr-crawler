@@ -135,6 +135,9 @@ function render(data) {
       <details><summary>Server außerhalb EU/EWR (${findings.nonEuHosts.length})</summary>
         <ul>${findings.nonEuHosts.map(t => `<li>${escapeHtml(t.host)} — ${escapeHtml(t.country)}</li>`).join('') || '<li>keine erkannt</li>'}</ul>
       </details>
+      <details><summary>CDN-/Anycast-Anbieter, Standort unklar (${findings.cdnUncertainHosts.length})</summary>
+        <ul>${findings.cdnUncertainHosts.map(t => `<li>${escapeHtml(t.host)}</li>`).join('') || '<li>keine</li>'}</ul>
+      </details>
       <details><summary>Cookies (${findings.cookies.length})</summary>
         <ul>${findings.cookies.map(c => `<li>${escapeHtml(c.name)} (${escapeHtml(c.domain)})</li>`).join('') || '<li>keine</li>'}</ul>
       </details>
