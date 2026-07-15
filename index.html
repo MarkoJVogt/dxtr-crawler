@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>DXTR — Live-Scan (Prototyp)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1B3A4B; --ink: #1B2530; --muted: #5A6169; --faint: #8A9199;
+    --bg: #F7F5F1; --card: #ffffff; --border: #E5E2DC;
+    --red-bg: #FDEDEC; --red-border: #F0B4AF; --red: #8A2C25;
+    --yellow-bg: #FEF6E4; --yellow-border: #F0D9A0; --yellow: #8A6A1E;
+    --green-bg: #EAF5EC; --green-border: #B7DCC0; --green: #2E6B3E;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--ink); }
+  .wrap { max-width: 780px; margin: 0 auto; padding: 40px 20px 80px; }
+  h1 { font-family: 'Source Serif 4', serif; font-size: 28px; margin: 0 0 6px; }
+  .sub { color: var(--muted); font-size: 14px; margin: 0 0 28px; }
+  .scan-box { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; margin-bottom: 24px; }
+  input[type=text] { width: 100%; padding: 12px 14px; font-size: 15px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; }
+  button { background: var(--navy); color: #fff; border: none; border-radius: 8px; padding: 12px 22px; font-size: 14.5px; font-weight: 600; cursor: pointer; }
+  button:disabled { background: #D8DCE0; cursor: not-allowed; }
+  .disclaimer { font-size: 12.5px; color: var(--faint); margin-top: 10px; line-height: 1.5; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 12px; }
+  .card.red { border-left: 4px solid var(--red); }
+  .card.yellow { border-left: 4px solid var(--yellow); }
+  .card.green { border-left: 4px solid var(--green); }
+  .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 5px; text-transform: uppercase; margin-bottom: 8px; }
+  .badge.red { background: var(--red-bg); color: var(--red); }
+  .badge.yellow { background: var(--yellow-bg); color: var(--yellow); }
+  .badge.green { background: var(--green-bg); color: var(--green); }
+  .card h3 { margin: 0 0 6px; font-size: 15.5px; }
+  .card p { margin: 0; font-size: 13.5px; color: var(--muted); line-height: 1.55; }
+  .legal-q { margin-top: 12px; padding: 12px 14px; background: #F7F5F1; border-radius: 6px; font-size: 13px; position: relative; }
+  .legal-q.locked .legal-q-text { filter: blur(5px); user-select: none; }
+  .legal-q-label { font-size: 11px; font-weight: 700; color: var(--faint); text-transform: uppercase; margin-bottom: 4px; }
+  .cta { margin-top: 8px; font-size: 12.5px; }
+  .cta a { color: var(--navy); font-weight: 600; }
+  details summary { cursor: pointer; font-size: 12.5px; color: var(--navy); font-weight: 500; margin-top: 10px; }
+  .raw { margin-top: 8px; font-size: 12.5px; color: var(--muted); }
+  .raw code { background: #F0EEE9; padding: 1px 5px; border-radius: 4px; }
+  #loading { color: var(--muted); font-size: 14px; }
+  #error { color: var(--red); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>DXTR — Live-Scan</h1>
+  <p class="sub">Prototyp · scannt eine Website auf Cookies, Tracker und Consent-Signale.</p>
+
+  <div class="scan-box">
+    <input type="text" id="urlInput" placeholder="https://beispiel-startup.de" />
+    <button id="scanBtn">Scan starten</button>
+    <p class="disclaimer">
+      Dieser Scan liefert technische Befunde, keine Rechtsberatung. Rechtliche Einordnungen
+      werden gesondert ausgewiesen. Vor Nutzung: nur eigene oder ausdrücklich freigegebene
+      Websites scannen.
+    </p>
+  </div>
+
+  <div id="loading" style="display:none;">Scan läuft — das kann bis zu 30 Sekunden dauern…</div>
+  <div id="error" style="display:none;"></div>
+  <div id="results"></div>
+</div>
+
+<script>
+const scanBtn = document.getElementById('scanBtn');
+const urlInput = document.getElementById('urlInput');
+const loading = document.getElementById('loading');
+const errorBox = document.getElementById('error');
+const results = document.getElementById('results');
+
+scanBtn.addEventListener('click', runScan);
+urlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') runScan(); });
+
+async function runScan() {
+  const url = urlInput.value.trim();
+  if (!url) return;
+  results.innerHTML = '';
+  errorBox.style.display = 'none';
+  loading.style.display = 'block';
+  scanBtn.disabled = true;
+
+  try {
+    const res = await fetch('/api/scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Scan fehlgeschlagen.');
+    render(data);
+  } catch (e) {
+    errorBox.textContent = e.message;
+    errorBox.style.display = 'block';
+  } finally {
+    loading.style.display = 'none';
+    scanBtn.disabled = false;
+  }
+}
+
+function render(data) {
+  const { evaluation, findings } = data;
+  let html = '';
+
+  for (const s of evaluation) {
+    html += `<div class="card ${s.level}">
+      <span class="badge ${s.level}">${s.level === 'red' ? 'Prüfen' : s.level === 'yellow' ? 'Beobachten' : 'OK'}</span>
+      <h3>${escapeHtml(s.title)}</h3>
+      <p>${escapeHtml(s.reason)}</p>`;
+    if (s.legalQuestion) {
+      html += `<div class="legal-q locked">
+        <div class="legal-q-label">Rechtliche Frage</div>
+        <div class="legal-q-text">${escapeHtml(s.legalQuestion)}</div>
+        <div class="cta">🔒 Freigeschaltet mit Beratungstermin oder Abo — <a href="#" onclick="alert('Terminbuchung folgt.'); return false;">Termin bei Björn buchen</a></div>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+
+  html += `<div class="card">
+    <h3>Technische Rohdaten</h3>
+    <div class="raw">
+      <p>Gefundene Third-Party-Hosts: <code>${findings.totalThirdPartyHosts}</code></p>
+      <details><summary>Bekannte Tracker anzeigen (${findings.knownTrackers.length})</summary>
+        <ul>${findings.knownTrackers.map(t => `<li>${escapeHtml(t.host)} — ${escapeHtml(t.name)} (${escapeHtml(t.category)})</li>`).join('') || '<li>keine</li>'}</ul>
+      </details>
+      <details><summary>Unbekannte Third-Party-Hosts (${findings.unknownThirdParty.length})</summary>
+        <ul>${findings.unknownThirdParty.map(t => `<li>${escapeHtml(t.host)}</li>`).join('') || '<li>keine</li>'}</ul>
+      </details>
+      <details><summary>Server außerhalb EU/EWR (${findings.nonEuHosts.length})</summary>
+        <ul>${findings.nonEuHosts.map(t => `<li>${escapeHtml(t.host)} — ${escapeHtml(t.country)}</li>`).join('') || '<li>keine erkannt</li>'}</ul>
+      </details>
+      <details><summary>Cookies (${findings.cookies.length})</summary>
+        <ul>${findings.cookies.map(c => `<li>${escapeHtml(c.name)} (${escapeHtml(c.domain)})</li>`).join('') || '<li>keine</li>'}</ul>
+      </details>
+    </div>
+  </div>`;
+
+  results.innerHTML = html;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = String(str ?? '');
+  return div.innerHTML;
+}
+</script>
+</body>
+</html>

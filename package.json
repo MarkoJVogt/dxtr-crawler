@@ -1,0 +1,14 @@
+{
+  "name": "dxtr-crawler",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "playwright": "^1.47.0",
+    "tldts": "^6.1.32"
+  }
+}

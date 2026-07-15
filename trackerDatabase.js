@@ -1,0 +1,52 @@
+// Prototyp-Datenbank bekannter Third-Party-Dienste. Nicht vollständig —
+// Muster-Erkennung, kein abschließendes Urteil. Wird laufend erweitert.
+export const TRACKER_DB = [
+  { domain: "google-analytics.com", name: "Google Analytics", category: "Analytics" },
+  { domain: "analytics.google.com", name: "Google Analytics", category: "Analytics" },
+  { domain: "googletagmanager.com", name: "Google Tag Manager", category: "Analytics/Tag-Management" },
+  { domain: "doubleclick.net", name: "Google DoubleClick", category: "Advertising" },
+  { domain: "googlesyndication.com", name: "Google AdSense", category: "Advertising" },
+  { domain: "googleadservices.com", name: "Google Ads", category: "Advertising" },
+  { domain: "facebook.net", name: "Meta Pixel", category: "Advertising/Social" },
+  { domain: "connect.facebook.net", name: "Meta Pixel", category: "Advertising/Social" },
+  { domain: "facebook.com", name: "Meta (Social Plugin)", category: "Social" },
+  { domain: "hotjar.com", name: "Hotjar", category: "Session Recording" },
+  { domain: "clarity.ms", name: "Microsoft Clarity", category: "Session Recording" },
+  { domain: "hs-analytics.net", name: "HubSpot Analytics", category: "Analytics" },
+  { domain: "hsforms.net", name: "HubSpot Forms", category: "Marketing" },
+  { domain: "matomo.cloud", name: "Matomo (Cloud)", category: "Analytics" },
+  { domain: "tiktok.com", name: "TikTok Pixel", category: "Advertising/Social" },
+  { domain: "linkedin.com", name: "LinkedIn Insight Tag", category: "Advertising/Social" },
+  { domain: "ads-twitter.com", name: "X/Twitter Ads", category: "Advertising" },
+  { domain: "criteo.com", name: "Criteo", category: "Advertising" },
+  { domain: "adnxs.com", name: "AppNexus/Xandr", category: "Advertising" },
+  { domain: "amazon-adsystem.com", name: "Amazon Advertising", category: "Advertising" },
+  { domain: "mouseflow.com", name: "Mouseflow", category: "Session Recording" },
+  { domain: "fullstory.com", name: "FullStory", category: "Session Recording" },
+  { domain: "intercom.io", name: "Intercom", category: "Support-Chat" },
+  { domain: "zendesk.com", name: "Zendesk", category: "Support-Chat" },
+  { domain: "youtube.com", name: "YouTube Embed", category: "Video/Tracking" },
+  { domain: "ytimg.com", name: "YouTube (Assets)", category: "Video/Tracking" },
+  { domain: "vimeo.com", name: "Vimeo Embed", category: "Video/Tracking" },
+  { domain: "mixpanel.com", name: "Mixpanel", category: "Analytics" },
+  { domain: "segment.com", name: "Segment", category: "Analytics/Datenintegration" },
+  { domain: "optimizely.com", name: "Optimizely", category: "A/B-Testing" },
+  { domain: "crazyegg.com", name: "Crazy Egg", category: "Session Recording" },
+  { domain: "cloudflareinsights.com", name: "Cloudflare Web Analytics", category: "Analytics" },
+  { domain: "sentry.io", name: "Sentry (Error Tracking)", category: "Monitoring" },
+  { domain: "stripe.com", name: "Stripe", category: "Zahlungsdienstleister" },
+  { domain: "paypal.com", name: "PayPal", category: "Zahlungsdienstleister" },
+  { domain: "recaptcha.net", name: "Google reCAPTCHA", category: "Security/Tracking" },
+  { domain: "gstatic.com", name: "Google (statische Assets)", category: "Infrastruktur/Google" },
+  { domain: "bing.com", name: "Microsoft Bing Ads", category: "Advertising" },
+  { domain: "pinterest.com", name: "Pinterest Tag", category: "Advertising/Social" },
+  { domain: "snapchat.com", name: "Snap Pixel", category: "Advertising/Social" },
+  { domain: "usercentrics.eu", name: "Usercentrics (Consent-Tool)", category: "Consent-Management" },
+  { domain: "cookiebot.com", name: "Cookiebot (Consent-Tool)", category: "Consent-Management" },
+  { domain: "onetrust.com", name: "OneTrust (Consent-Tool)", category: "Consent-Management" },
+];
+
+export function classifyDomain(domain) {
+  const entry = TRACKER_DB.find((t) => domain === t.domain || domain.endsWith("." + t.domain));
+  return entry || null;
+}
